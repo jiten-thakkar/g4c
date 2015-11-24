@@ -308,23 +308,54 @@ gacm_match_nl0(g4c_acm_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {
-    int tid = threadIdx.x + blockIdx.x*blockDim.x;
+    const unsigned long long int blockId = blockIdx.x //1D
+                                           + blockIdx.y * gridDim.x //2D
+                                           + gridDim.x * gridDim.y * blockIdx.z; //3D
 
+// global unique thread index, block dimension uses only x-coordinate
+    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
+
+//    int tid = threadIdx.x + blockIdx.x*blockDim.x;
+	int zdim = threadIdx.z;
     uint8_t *payload = data + data_stride*tid + data_ofs;
 
     int outidx = 0x1fffffff;
-    int nid, cid = 0, tres;
-    for (int i=0; i<(data_stride-data_ofs); i++) {
-	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
-        tres = *g4c_acm_doutput(dacm, cid);
-	if (tres && tres < outidx) {
-	    outidx = tres;
-	}
-	cid = nid;
+//    int nid, cid = 0, tres;
+//    for (int i=0; i<(data_stride-data_ofs); i++) {
+//	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
+//        tres = *g4c_acm_doutput(dacm, cid);
+//	if (tres && tres < outidx) {
+//	    outidx = tres;
+//	}
+//	cid = nid;
+//    }
+
+    int *lps = g4c_kmp_dlpss(dacm, zdim);
+    char* pattern = g4c_kmp_dpatterns(dacm, zdim);
+    int i = 0, j = 0;// index for txt[]
+    while (i < data_stride) {
+        if (pattern[j] == payload[i]) {
+            j++;
+            i++;
+        }
+        if (j == PATTERN_LENGTH) {
+//            printf("Found pattern at index %d \n", i-j);
+            outidx = i-j;
+            break;
+//            j = lps[j-1];
+        } else if (i < data_stride && pat[j] != txt[i]) { // mismatch after j matches
+            // Do not match lps[0..lps[j-1]] characters,
+            // they will match anyway
+            if (j != 0)
+                j = lps[j-1];
+            else
+                i = i+1;
+        }
     }
+
     if (outidx == 0x1fffffff)
 	outidx = 0;
-    *(ress + tid*res_stride+res_ofs) = outidx;
+    *(ress + tid*res_stride + zdim + res_ofs) = outidx;
 }
 
 __global__ void
@@ -389,13 +420,13 @@ g4c_gpu_acm_match(
     if (dlens) {
 	switch(mtype) {
 	case 1:
-	    gacm_match_l1<<<nblocks, nthreads, 0, stream>>>(
+	    gacm_match_l1<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
 		dacm, ddata, data_stride, data_ofs, dlens,
 		dress, res_stride, res_ofs);
 	    break;
 	case 0:
 	default:
-	    gacm_match_l0<<<nblocks, nthreads, 0, stream>>>(
+	    gacm_match_l0<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
 		dacm, ddata, data_stride, data_ofs, dlens,
 		dress, res_stride, res_ofs);
 	    break;
@@ -403,13 +434,13 @@ g4c_gpu_acm_match(
     } else {
 	switch(mtype) {
 	case 1:
-	    gacm_match_nl1<<<nblocks, nthreads, 0, stream>>>(
+	    gacm_match_nl1<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
 		dacm, ddata, data_stride, data_ofs,
 		dress, res_stride, res_ofs);
 	    break;
 	case 0:
 	default:
-	    gacm_match_nl0<<<nblocks, nthreads, 0, stream>>>(
+	    gacm_match_nl0<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
 		dacm, ddata, data_stride, data_ofs,
 		dress, res_stride, res_ofs);
 	    break;

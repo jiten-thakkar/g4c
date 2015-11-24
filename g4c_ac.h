@@ -23,6 +23,8 @@ extern "C" {
 
 
 #define AC_ALPHABET_SIZE 256
+#define PATTERN_LENGTH 16
+#define TOTAL_PATTERNS 1024
 	
     typedef struct _ac_state_t {
         int id;
@@ -86,6 +88,20 @@ extern "C" {
 	int *doutputs;
     } g4c_acm_t;
 
+    typedef struct _g4c_kmp_t {
+        void *mem;
+        size_t memsz;
+        void *devmem;
+
+
+        int nlpss;
+        int *lspss;
+        char **patterns;
+
+        int *dlspss;
+        char **dpatterns;
+    } g4c_kmp_t;
+
 #define g4c_acm_htransitions(acm, id) \
     ((int*)((acm)->transitions + (id)*AC_ALPHABET_SIZE))
 #define g4c_acm_dtransitions(acm, id) \
@@ -94,6 +110,15 @@ extern "C" {
     ((int*)((acm)->outputs + (id)))
 #define g4c_acm_doutput(acm, id) \
     ((int*)((acm)->doutputs + (id)))
+
+#define g4c_kmp_hlpss(acm, id) \
+    ((int*)((acm)->lpss + (id)*PATTERN_LENGTH))
+#define g4c_kmp_dlpss(acm, id) \
+    ((int*)((acm)->dlpss + (id)*PATTERN_LENGTH))
+#define g4c_kmp_hpatterns(acm, id) \
+    ((char*)((acm)->*patterns + (id)))
+#define g4c_kmp_dpatterns(acm, id) \
+    ((char*)((acm)->*dpatterns + (id)))
 
     g4c_acm_t *g4c_create_matcher(
 	char **ptns, int nptns, int withdev, int stream);

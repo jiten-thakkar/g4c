@@ -4,6 +4,7 @@
 #endif
 
 #include <stddef.h>
+#include <string.h>
 
 #include <errno.h>
 #include "g4c.h"
@@ -51,6 +52,57 @@ public:
     }
 };
 
+class KMPMachine {
+public:
+    vector<int*> lpss;
+    char **patterns;
+    int npatterns;
+
+    KMPMachine() {}
+    ~KMPMachine() {
+        for (int i = 0; i < lpss.size(); ++i) {
+            delete lpss[i];
+            lpss.clear();
+        }
+    }
+};
+
+void computeLPSArray(char *pat, int M, int *lps) {
+    int len = 0;  // length of the previous longest prefix suffix
+    int i;
+    lps[0] = 0; // lps[0] is always 0
+    i = 1;
+    // the loop calculates lps[i] for i = 1 to M-1
+    while (i < M) {
+        if (pat[i] == pat[len]) {
+            len++;
+            lps[i] = len;
+            i++;
+        }
+        else {
+            if (len != 0) {
+                len = lps[len-1];
+            }
+            else {
+                lps[i] = 0;
+                i++;
+            }
+        }
+    }
+}
+
+static void
+ac_build_lps(char **ptns, int nptns, KMPMachine *cppkmpm) {
+    int i;
+    vector<int*> &lpss = cppkmpm->lpss;
+    for (i=0; i<nptns; i++) {
+        char* pattern = ptns[i];
+        int M = strlen(pattern);
+        int *lps = (int *)malloc(sizeof(int)*M);
+        cppkmpm->lpss.push_back(lps);
+        computeLPSArray(pattern, M, lps);
+    }
+}
 
 static void
 ac_build_goto(char *kws[], int n, ACMachine *acm)
@@ -179,66 +231,141 @@ g4c_cpu_acm_match(g4c_acm_t *acm, uint8_t *data, int len)
     return ret;
 }
 
-extern "C" g4c_acm_t*
+//extern "C" g4c_acm_t*
+//g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
+//{
+//    ACMachine *cppacm = new ACMachine();
+//    if (!cppacm) {
+//	fprintf(stderr, "Out of memory for C++ ACM\n");
+//	return 0;
+//    }
+//
+//    ac_build_goto(ptns, nptns, cppacm);
+//    ac_build_failure(cppacm);
+//    ac_build_transition(cppacm);
+//
+//    size_t trsz = cppacm->states.size()*AC_ALPHABET_SIZE*sizeof(int);
+//    trsz = g4c_round_up(trsz, G4C_PAGE_SIZE);
+//
+//    size_t outsz = cppacm->states.size()*sizeof(int);
+//    outsz = g4c_round_up(outsz, G4C_PAGE_SIZE);
+//
+//    size_t totalsz = G4C_PAGE_SIZE + trsz + outsz;
+//    g4c_acm_t *acm = (g4c_acm_t*)g4c_alloc_page_lock_mem(totalsz);
+//    void *dmem = 0;
+//    if (withdev) {
+//	dmem = g4c_alloc_dev_mem(totalsz);
+//    }
+//
+//    if (!acm || (withdev && !dmem)) {
+//	fprintf(stderr, "Out of mem for acm GPU memory or device mem "
+//		"%p, %p, %lu\n", acm, dmem, totalsz);
+//	return 0;
+//    }
+//
+//    acm->mem = (void*)acm;
+//    acm->devmem = dmem;
+//    acm->memsz = totalsz;
+//    acm->nstates = (int)cppacm->states.size();
+//    acm->transitions = (int*)g4c_ptr_add(acm->mem, G4C_PAGE_SIZE);
+//    acm->outputs = (int*)g4c_ptr_add(acm->transitions, trsz);
+//    if (withdev) {
+//	acm->dtransitions = (int*)g4c_ptr_add(acm->devmem, G4C_PAGE_SIZE);
+//	acm->doutputs = (int*)g4c_ptr_add(acm->dtransitions, trsz);
+//    }
+//
+//    for (int i=0; i<acm->nstates; i++) {
+//	ACState *cpps = cppacm->states[i];
+//	memcpy(g4c_acm_htransitions(acm, i),
+//	       cpps->transition,
+//	       sizeof(int)*AC_ALPHABET_SIZE);
+//	if (cpps->output.size()) {
+//	    set<int>::iterator minout =
+//		min_element(cpps->output.begin(), cpps->output.end());
+//	    *g4c_acm_houtput(acm, i) = (*minout) + 1;
+//	} else {
+//	    *g4c_acm_houtput(acm, i) = 0;
+//	}
+//    }
+//
+//    if (withdev) {
+//	g4c_h2d_async(acm->mem, acm->devmem, acm->memsz, stream);
+//	g4c_stream_sync(stream);
+//    }
+//
+//    return acm;
+//}
+
+extern "C" g4c_kmp_t*
 g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
 {
-    ACMachine *cppacm = new ACMachine();
-    if (!cppacm) {
-	fprintf(stderr, "Out of memory for C++ ACM\n");
-	return 0;
+    KMPMachine *cppkmpm = new KMPMachine();
+    if (!cppkmpm) {
+        fprintf(stderr, "Out of memory for C++ KMPM\n");
+        return 0;
     }
+    cppkmpm->patterns = ptns;
+    cppkmpm->npatterns = nptns;
 
-    ac_build_goto(ptns, nptns, cppacm);
-    ac_build_failure(cppacm);
-    ac_build_transition(cppacm);
+    ac_build_lps(ptns, nptns, cppkmpm);
 
-    size_t trsz = cppacm->states.size()*AC_ALPHABET_SIZE*sizeof(int);
-    trsz = g4c_round_up(trsz, G4C_PAGE_SIZE);
+//    ac_build_goto(ptns, nptns, cppacm);
+//    ac_build_failure(cppacm);
+//    ac_build_transition(cppacm);
 
-    size_t outsz = cppacm->states.size()*sizeof(int);
-    outsz = g4c_round_up(outsz, G4C_PAGE_SIZE);
+    size_t lpssz = cppkmpm->lpss.size()*PATTERN_LENGTH* sizeof(int);
+//    size_t trsz = cppacm->states.size()*AC_ALPHABET_SIZE*sizeof(int);
+    lpssz = g4c_round_up(lpssz, G4C_PAGE_SIZE);
 
-    size_t totalsz = G4C_PAGE_SIZE + trsz + outsz;
-    g4c_acm_t *acm = (g4c_acm_t*)g4c_alloc_page_lock_mem(totalsz);
+//    size_t outsz = cppkmpm->lpss.size()*sizeof(int);
+//    outsz = g4c_round_up(outsz, G4C_PAGE_SIZE);
+    size_t patternssz = cppkmpm->npatterns*PATTERN_LENGTH*sizeof(char);
+    patternssz == g4c_round_up(patternssz, G4C_PAGE_SIZE);
+
+    size_t totalsz = G4C_PAGE_SIZE + lpssz;
+    g4c_kmp_t *acm = (g4c_kmp_t*)g4c_alloc_page_lock_mem(totalsz);
     void *dmem = 0;
     if (withdev) {
-	dmem = g4c_alloc_dev_mem(totalsz);
+        dmem = g4c_alloc_dev_mem(totalsz);
     }
 
     if (!acm || (withdev && !dmem)) {
-	fprintf(stderr, "Out of mem for acm GPU memory or device mem "
-		"%p, %p, %lu\n", acm, dmem, totalsz);
-	return 0;
+        fprintf(stderr, "Out of mem for acm GPU memory or device mem "
+                "%p, %p, %lu\n", acm, dmem, totalsz);
+        return 0;
     }
 
     acm->mem = (void*)acm;
     acm->devmem = dmem;
     acm->memsz = totalsz;
-    acm->nstates = (int)cppacm->states.size();
-    acm->transitions = (int*)g4c_ptr_add(acm->mem, G4C_PAGE_SIZE);
-    acm->outputs = (int*)g4c_ptr_add(acm->transitions, trsz);
+    acm->nlpss = (int)cppkmpm->lpss.size();
+//    acm->transitions = (int*)g4c_ptr_add(acm->mem, G4C_PAGE_SIZE);
+//    acm->outputs = (int*)g4c_ptr_add(acm->transitions, trsz);
+    acm->lspss = (int*)g4c_ptr_add(acm->mem, G4C_PAGE_SIZE);
+    acm->patterns = (char**)g4c_ptr_add(acm->lspss, G4C_PAGE_SIZE);
     if (withdev) {
-	acm->dtransitions = (int*)g4c_ptr_add(acm->devmem, G4C_PAGE_SIZE);
-	acm->doutputs = (int*)g4c_ptr_add(acm->dtransitions, trsz);
+        acm->dlspss = (int*)g4c_ptr_add(acm->devmem, G4C_PAGE_SIZE);
+        acm->dpatterns = (char**)g4c_ptr_add(acm->dlspss, trsz);
     }
 
-    for (int i=0; i<acm->nstates; i++) {
-	ACState *cpps = cppacm->states[i];
-	memcpy(g4c_acm_htransitions(acm, i),
-	       cpps->transition,
-	       sizeof(int)*AC_ALPHABET_SIZE);
-	if (cpps->output.size()) {
-	    set<int>::iterator minout =
-		min_element(cpps->output.begin(), cpps->output.end());
-	    *g4c_acm_houtput(acm, i) = (*minout) + 1;
-	} else {
-	    *g4c_acm_houtput(acm, i) = 0;
-	}
+    for (int i=0; i<acm->nlpss; i++) {
+//        ACState *cpps = cppacm->states[i];
+        int *lps = cppkmpm->lpss[i];
+        char* pattern = cppkmpm->patterns[i];
+        memcpy(g4c_kmp_hlpss(acm, i), lps, sizeof(int)*PATTERN_LENGTH);
+//        if (cpps->output.size()) {
+//            set<int>::iterator minout =
+//                    min_element(cpps->output.begin(), cpps->output.end());
+//            *g4c_acm_houtput(acm, i) = (*minout) + 1;
+        memcpy(g4c_kmp_hpatterns(acm, i), pattern, sizeof(char)*PATTERN_LENGTH);
+//        } else {
+//            *g4c_acm_houtput(acm, i) = 0;
+//        }
     }
 
     if (withdev) {
-	g4c_h2d_async(acm->mem, acm->devmem, acm->memsz, stream);
-	g4c_stream_sync(stream);	
+        g4c_h2d_async(acm->mem, acm->devmem, acm->memsz, stream);
+        g4c_stream_sync(stream);
     }
 
     return acm;

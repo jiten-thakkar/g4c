@@ -97,7 +97,7 @@ gen_eval_store(eval_store *sst, int str_stride, int nstrs)
     sst->ress = (int*)(g4c_ptr_add(
 			   sst->lens,
 			   g4c_round_up(
-			       sst->count*sizeof(int), G4C_PAGE_SIZE)));
+			       sst->count*TOTAL_PATTERNS*sizeof(int), G4C_PAGE_SIZE)));
 
     sst->devstrs = (uint8_t*)sst->devbuf;
     sst->devlens = (int*)(g4c_ptr_add(
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 {
     int mtype = 0;
     int nrstream = 4;
-    int ptn_len = 16;
+    int ptn_len = PATTERN_LENGTH;
     int str_len = 1024;
     int nptns = 1024;
     int npkts = 1024;

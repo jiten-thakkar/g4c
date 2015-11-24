@@ -211,24 +211,48 @@ extern "C" {
 }
 
 extern "C" int
-g4c_cpu_acm_match(g4c_acm_t *acm, uint8_t *data, int len)
+g4c_cpu_acm_match(g4c_acm_t *acm, uint8_t *data, int len, int patternNum)
 {
-    int ret = 0, nid;
-    uint8_t c;
+//    int ret = 0, nid;
+//    uint8_t c;
+//
+//    int cid = 0;
+//    for (int i=0; i<len; i++) {
+//	c = data[i];
+//	nid = g4c_acm_htransitions(acm, cid)[c];
+//	if (*g4c_acm_houtput(acm, cid)) {
+//	    if (!ret || ret > *g4c_acm_houtput(acm, cid)) {
+//		ret = *g4c_acm_houtput(acm, cid);
+//	    }
+//	}
+//	cid = nid;
+//    }
 
-    int cid = 0;
-    for (int i=0; i<len; i++) {
-	c = data[i];
-	nid = g4c_acm_htransitions(acm, cid)[c];
-	if (*g4c_acm_houtput(acm, cid)) {
-	    if (!ret || ret > *g4c_acm_houtput(acm, cid)) {
-		ret = *g4c_acm_houtput(acm, cid);
-	    }
-	}
-	cid = nid;
+//    return ret;
+    int outidx = 0;
+    int *lps = g4c_kmp_dlpss(dacm, patternNum);
+    char* pattern = g4c_kmp_dpatterns(dacm, patternNum);
+    int i = 0, j = 0;// index for txt[]
+    while (i < len) {
+        if (pattern[j] == data[i]) {
+            j++;
+            i++;
+        }
+        if (j == PATTERN_LENGTH) {
+//            printf("Found pattern at index %d \n", i-j);
+            outidx = i-j;
+            break;
+//            j = lps[j-1];
+        } else if (i < len && pattern[j] != pattern[i]) { // mismatch after j matches
+            // Do not match lps[0..lps[j-1]] characters,
+            // they will match anyway
+            if (j != 0)
+                j = lps[j-1];
+            else
+                i = i+1;
+        }
     }
-
-    return ret;
+    return outidx;
 }
 
 //extern "C" g4c_acm_t*

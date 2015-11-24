@@ -274,11 +274,13 @@ int main(int argc, char *argv[])
 	tv = timing_start();
 	for (int st=0; st<ns; st++) {
 	    for (int i=0; i<nrpkts[b]; i++) {
-		eval_items[st].ress[i] =
-		    g4c_cpu_acm_match(
-			acm,
-			eval_items[st].strs + i*eval_items[st].stride,
-			eval_items[st].lens[i]+1);
+			for (int j = 0; j < TOTAL_PATTERNS; ++j) {
+				eval_items[st].ress[(i*TOTAL_PATTERNS)+j] =
+						g4c_cpu_acm_match(
+								acm,
+								eval_items[st].strs + i*eval_items[st].stride,
+								eval_items[st].lens[i]+1, j);
+			}
 	    }
 	}
 	ctimes[b] = timing_stop(&tv);

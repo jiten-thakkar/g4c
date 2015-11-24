@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 
     printf("Generating ACM... ");
     int s = g4c_alloc_stream();
-    g4c_acm_t *acm = g4c_create_matcher(ptns, nptns, 1, s);
+    g4c_kmp_t *acm = g4c_create_matcher(ptns, nptns, 1, s);
     if (!acm) {
 	printf("Failed\n");
 	return 0;
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     g4c_h2d_async(eval_items[ns-1].strs, eval_items[ns-1].devstrs,
 		  eval_items[ns-1].count*eval_items[ns-1].stride,
 		  eval_items[ns-1].stream);
-    g4c_gpu_acm_match((g4c_acm_t*)acm->devmem,
+    g4c_gpu_acm_match((g4c_kmp_t*)acm->devmem,
 		      eval_items[ns-1].count,
 		      eval_items[ns-1].devstrs,
 		      eval_items[ns-1].stride, 0, 0,
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 			  eval_items[i].devstrs,
 			  nrpkts[b]*eval_items[i].stride,
 			  eval_items[i].stream);
-	    g4c_gpu_acm_match((g4c_acm_t*)acm->devmem,
+	    g4c_gpu_acm_match((g4c_kmp_t*)acm->devmem,
 			      nrpkts[b],
 			      eval_items[i].devstrs,
 			      eval_items[i].stride, 0, 0,

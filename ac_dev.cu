@@ -304,7 +304,7 @@ gacm_match_l0(g4c_acm_t *dacm,
 }
 
 __global__ void
-gacm_match_nl0(g4c_acm_t *dacm,
+gacm_match_nl0(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {
@@ -405,7 +405,7 @@ gacm_match_nl1(g4c_acm_t *dacm,
 
 extern "C" int
 g4c_gpu_acm_match(
-    g4c_acm_t *dacm, int nr,
+    g4c_kmp_t *dacm, int nr,
     uint8_t *ddata, uint32_t data_stride, uint32_t data_ofs,
     int *dlens,
     int *dress, uint32_t res_stride, uint32_t res_ofs,

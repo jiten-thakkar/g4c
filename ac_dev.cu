@@ -283,24 +283,24 @@ gacm_match_l0(g4c_kmp_t *dacm,
 	      int *lens,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {
-    int tid = threadIdx.x + blockIdx.x*blockDim.x;
-
-    uint8_t *payload = data + data_stride*tid + data_ofs;
-    int mylen = lens[tid]-data_ofs;
-
-    int outidx = 0x1fffffff;
-    int nid, cid = 0, tres;
-    for (int i=0; i<mylen; i++) {
-	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
-        tres = *g4c_acm_doutput(dacm, cid);
-	if (tres && tres < outidx) {
-	    outidx = tres;
-	}
-	cid = nid;
-    }
-    if (outidx == 0x1fffffff)
-	outidx = 0;
-    *(ress + tid*res_stride+res_ofs) = outidx;
+//    int tid = threadIdx.x + blockIdx.x*blockDim.x;
+//
+//    uint8_t *payload = data + data_stride*tid + data_ofs;
+//    int mylen = lens[tid]-data_ofs;
+//
+//    int outidx = 0x1fffffff;
+//    int nid, cid = 0, tres;
+//    for (int i=0; i<mylen; i++) {
+//	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
+//        tres = *g4c_acm_doutput(dacm, cid);
+//	if (tres && tres < outidx) {
+//	    outidx = tres;
+//	}
+//	cid = nid;
+//    }
+//    if (outidx == 0x1fffffff)
+//	outidx = 0;
+//    *(ress + tid*res_stride+res_ofs) = outidx;
 }
 
 __global__ void
@@ -364,22 +364,22 @@ gacm_match_l1(g4c_kmp_t *dacm,
 	      int *lens,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {
-    int tid = threadIdx.x + blockIdx.x*blockDim.x;
-
-    uint8_t *payload = data + data_stride*tid + data_ofs;
-    int mylen = lens[tid]-data_ofs;
-
-    int nid, cid = 0, tres;
-    for (int i=0; i<mylen; i++) {
-	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
-        tres = *g4c_acm_doutput(dacm, cid);
-	if (tres) {
-	    *(ress + tid*res_stride+res_ofs) = tres;
-	    return;
-	}
-	cid = nid;
-    }
-    *(ress + tid*res_stride+res_ofs) = 0;
+//    int tid = threadIdx.x + blockIdx.x*blockDim.x;
+//
+//    uint8_t *payload = data + data_stride*tid + data_ofs;
+//    int mylen = lens[tid]-data_ofs;
+//
+//    int nid, cid = 0, tres;
+//    for (int i=0; i<mylen; i++) {
+//	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
+//        tres = *g4c_acm_doutput(dacm, cid);
+//	if (tres) {
+//	    *(ress + tid*res_stride+res_ofs) = tres;
+//	    return;
+//	}
+//	cid = nid;
+//    }
+//    *(ress + tid*res_stride+res_ofs) = 0;
 }
 
 __global__ void
@@ -387,20 +387,20 @@ gacm_match_nl1(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {
-    int tid = threadIdx.x + blockIdx.x*blockDim.x;
-
-    uint8_t *payload = data + data_stride*tid + data_ofs;
-
-    int nid, cid = 0, tres;
-    for (int i=0; i<(data_stride-data_ofs); i++) {
-	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
-        tres = *g4c_acm_doutput(dacm, cid);
-	if (tres) {
-	    *(ress + tid*res_stride + res_ofs) = tres;
-	}
-	cid = nid;
-    }
-    *(ress + tid*res_stride + res_ofs) = 0;
+//    int tid = threadIdx.x + blockIdx.x*blockDim.x;
+//
+//    uint8_t *payload = data + data_stride*tid + data_ofs;
+//
+//    int nid, cid = 0, tres;
+//    for (int i=0; i<(data_stride-data_ofs); i++) {
+//	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
+//        tres = *g4c_acm_doutput(dacm, cid);
+//	if (tres) {
+//	    *(ress + tid*res_stride + res_ofs) = tres;
+//	}
+//	cid = nid;
+//    }
+//    *(ress + tid*res_stride + res_ofs) = 0;
 }
 
 extern "C" int

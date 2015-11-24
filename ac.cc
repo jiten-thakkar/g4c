@@ -345,7 +345,7 @@ g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
     acm->patterns = (char**)g4c_ptr_add(acm->lspss, G4C_PAGE_SIZE);
     if (withdev) {
         acm->dlspss = (int*)g4c_ptr_add(acm->devmem, G4C_PAGE_SIZE);
-        acm->dpatterns = (char**)g4c_ptr_add(acm->dlspss, trsz);
+        acm->dpatterns = (char**)g4c_ptr_add(acm->dlspss, patternssz);
     }
 
     for (int i=0; i<acm->nlpss; i++) {

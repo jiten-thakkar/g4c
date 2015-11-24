@@ -112,15 +112,15 @@ extern "C" {
     ((int*)((acm)->doutputs + (id)))
 
 #define g4c_kmp_hlpss(acm, id) \
-    ((int*)((acm)->lpss + (id)*PATTERN_LENGTH))
+    ((int*)((acm)->lspss + (id)*PATTERN_LENGTH))
 #define g4c_kmp_dlpss(acm, id) \
-    ((int*)((acm)->dlpss + (id)*PATTERN_LENGTH))
+    ((int*)((acm)->dlspss + (id)*PATTERN_LENGTH))
 #define g4c_kmp_hpatterns(acm, id) \
-    ((char*)((acm)->*patterns + (id)))
+    ((char*)(*(acm)->patterns + (id)))
 #define g4c_kmp_dpatterns(acm, id) \
-    ((char*)((acm)->*dpatterns + (id)))
+    ((char*)(*(acm)->dpatterns + (id)))
 
-    g4c_acm_t *g4c_create_matcher(
+    g4c_kmp_t *g4c_create_matcher(
 	char **ptns, int nptns, int withdev, int stream);
 
     // Result values: 0 no match; pos-num, rule idx + 1.

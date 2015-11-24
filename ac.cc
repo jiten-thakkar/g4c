@@ -211,7 +211,7 @@ extern "C" {
 }
 
 extern "C" int
-g4c_cpu_acm_match(g4c_acm_t *acm, uint8_t *data, int len, int patternNum)
+g4c_cpu_acm_match(g4c_kmp_t *acm, uint8_t *data, int len, int patternNum)
 {
 //    int ret = 0, nid;
 //    uint8_t c;

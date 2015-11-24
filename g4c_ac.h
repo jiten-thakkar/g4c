@@ -131,7 +131,7 @@ extern "C" {
 	int *dress, uint32_t res_stride, uint32_t res_ofs,
 	int s, int mtype);
     int g4c_cpu_acm_match(
-	g4c_acm_t *acm, uint8_t *data, int len, int patternNumber);
+	g4c_kmp_t *acm, uint8_t *data, int len, int patternNumber);
 	
 
     int ac_build_machine(

@@ -278,7 +278,7 @@ ac_gmatch2_ofs(char *dstrs, int n, int stride, int *dlens, int *dress,
 
 
 __global__ void
-gacm_match_l0(g4c_acm_t *dacm,
+gacm_match_l0(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *lens,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
@@ -343,7 +343,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
             outidx = i-j;
             break;
 //            j = lps[j-1];
-        } else if (i < data_stride && pat[j] != txt[i]) { // mismatch after j matches
+        } else if (i < data_stride && pattern[j] != pattern[i]) { // mismatch after j matches
             // Do not match lps[0..lps[j-1]] characters,
             // they will match anyway
             if (j != 0)
@@ -359,7 +359,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 }
 
 __global__ void
-gacm_match_l1(g4c_acm_t *dacm,
+gacm_match_l1(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *lens,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
@@ -383,7 +383,7 @@ gacm_match_l1(g4c_acm_t *dacm,
 }
 
 __global__ void
-gacm_match_nl1(g4c_acm_t *dacm,
+gacm_match_nl1(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {

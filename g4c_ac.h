@@ -125,7 +125,7 @@ extern "C" {
 
     // Result values: 0 no match; pos-num, rule idx + 1.
     int g4c_gpu_acm_match(
-	g4c_acm_t *dacm, int nr,
+	g4c_kmp_t *dacm, int nr,
 	uint8_t *ddata, uint32_t data_stride, uint32_t data_ofs,
 	int *dlens,
 	int *dress, uint32_t res_stride, uint32_t res_ofs,

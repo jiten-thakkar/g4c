@@ -2,7 +2,7 @@
 
 CXX=g++
 NVCC=nvcc
-CXXFLAGS=-O3
+CXXFLAGS=-O3 -g
 NVCCFLAGS=-arch=sm_20 -O3
 
 COMMSRCS=../mm.cc ../main.cu

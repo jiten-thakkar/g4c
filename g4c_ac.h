@@ -116,9 +116,9 @@ extern "C" {
 #define g4c_kmp_dlpss(acm, id) \
     ((int*)((acm)->dlspss + (id)*PATTERN_LENGTH))
 #define g4c_kmp_hpatterns(acm, id) \
-    ((char*)(*(acm)->patterns + (id)))
+    ((char*)((acm)->patterns + (id)))
 #define g4c_kmp_dpatterns(acm, id) \
-    ((char*)(*(acm)->dpatterns + (id)))
+    ((char*)((acm)->dpatterns + (id)))
 
     g4c_kmp_t *g4c_create_matcher(
 	char **ptns, int nptns, int withdev, int stream);

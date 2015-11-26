@@ -230,8 +230,9 @@ g4c_cpu_acm_match(g4c_kmp_t *dacm, uint8_t *data, int len, int patternNum)
 
 //    return ret;
     int outidx = 0;
-    int *lps = g4c_kmp_dlpss(dacm, patternNum);
-    char* pattern = g4c_kmp_dpatterns(dacm, patternNum);
+    int *lps = g4c_kmp_hlpss(dacm, patternNum);
+    char* pattern = g4c_kmp_hpatterns(dacm, patternNum);
+    printf("");
     int i = 0, j = 0;// index for txt[]
     while (i < len) {
         if (pattern[j] == data[i]) {
@@ -243,7 +244,7 @@ g4c_cpu_acm_match(g4c_kmp_t *dacm, uint8_t *data, int len, int patternNum)
             outidx = i-j;
             break;
 //            j = lps[j-1];
-        } else if (i < len && pattern[j] != pattern[i]) { // mismatch after j matches
+        } else if (i < len && pattern[j] != data[i]) { // mismatch after j matches
             // Do not match lps[0..lps[j-1]] characters,
             // they will match anyway
             if (j != 0)
@@ -256,7 +257,7 @@ g4c_cpu_acm_match(g4c_kmp_t *dacm, uint8_t *data, int len, int patternNum)
 }
 
 //extern "C" g4c_acm_t*
-//g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
+//g c_create_matcher(char **ptns, int nptns, int withdev, int stream)
 //{
 //    ACMachine *cppacm = new ACMachine();
 //    if (!cppacm) {
@@ -322,7 +323,8 @@ g4c_cpu_acm_match(g4c_kmp_t *dacm, uint8_t *data, int len, int patternNum)
 
 extern "C" g4c_kmp_t*
 g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
-{
+{  
+    fprintf(stdout, "in g4c create matcher\n");
     KMPMachine *cppkmpm = new KMPMachine();
     if (!cppkmpm) {
         fprintf(stderr, "Out of memory for C++ KMPM\n");
@@ -346,7 +348,7 @@ g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
     size_t patternssz = cppkmpm->npatterns*PATTERN_LENGTH*sizeof(char);
     patternssz == g4c_round_up(patternssz, G4C_PAGE_SIZE);
 
-    size_t totalsz = G4C_PAGE_SIZE + lpssz;
+    size_t totalsz = G4C_PAGE_SIZE + lpssz + patternssz;
     g4c_kmp_t *acm = (g4c_kmp_t*)g4c_alloc_page_lock_mem(totalsz);
     void *dmem = 0;
     if (withdev) {
@@ -358,7 +360,7 @@ g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
                 "%p, %p, %lu\n", acm, dmem, totalsz);
         return 0;
     }
-
+   printf("allocated memories\n");
     acm->mem = (void*)acm;
     acm->devmem = dmem;
     acm->memsz = totalsz;
@@ -369,19 +371,25 @@ g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
     acm->patterns = (char**)g4c_ptr_add(acm->lspss, G4C_PAGE_SIZE);
     if (withdev) {
         acm->dlspss = (int*)g4c_ptr_add(acm->devmem, G4C_PAGE_SIZE);
-        acm->dpatterns = (char**)g4c_ptr_add(acm->dlspss, patternssz);
+	printf("in if dev\n");
+        acm->dpatterns = (char**)g4c_ptr_add(acm->dlspss, lpssz);
     }
-
+    printf("out of the if\n");
     for (int i=0; i<acm->nlpss; i++) {
 //        ACState *cpps = cppacm->states[i];
+        printf("in for loop: %d\n", i);
         int *lps = cppkmpm->lpss[i];
+        printf("lps: %d\n", i);
         char* pattern = cppkmpm->patterns[i];
+	printf("pattern: %d\n", i);
         memcpy(g4c_kmp_hlpss(acm, i), lps, sizeof(int)*PATTERN_LENGTH);
+        printf("memcpy of lps: %d\n", i);
 //        if (cpps->output.size()) {
 //            set<int>::iterator minout =
 //                    min_element(cpps->output.begin(), cpps->output.end());
 //            *g4c_acm_houtput(acm, i) = (*minout) + 1;
         memcpy(g4c_kmp_hpatterns(acm, i), pattern, sizeof(char)*PATTERN_LENGTH);
+        printf("memcpy of patterns: %d\n", i);
 //        } else {
 //            *g4c_acm_houtput(acm, i) = 0;
 //        }

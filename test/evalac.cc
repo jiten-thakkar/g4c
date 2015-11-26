@@ -76,6 +76,7 @@ typedef struct {
 static int
 gen_eval_store(eval_store *sst, int str_stride, int nstrs)
 {
+    printf("In eval store\n");
     sst->count = nstrs;
     sst->stride = str_stride;
     sst->bufsz = g4c_round_up(sst->stride*sst->count, G4C_PAGE_SIZE) +
@@ -177,7 +178,7 @@ int main(int argc, char *argv[])
     } else
 	printf("Done\n");
 
-    printf("Generating ACM... ");
+    printf("Generating ACM... \n");
     int s = g4c_alloc_stream();
     g4c_kmp_t *acm = g4c_create_matcher(ptns, nptns, 1, s);
     if (!acm) {

@@ -357,10 +357,12 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     int i = 0, j = 0;// index for txt[]
     while (i < data_stride) {
         //printf("in while, i: %d\n", i);
-        if (pattern[j] == payload[i]) {
-            j++;
-            i++;
-        }
+//        if (pattern[j] == payload[i]) {
+//            j++;
+//            i++;
+//        }
+        j += pattern[j] == payload[i];
+        i += pattern[j] == payload[i];
         if (j == patternLength) {
 //            printf("Found pattern at index %d \n", i-j);
             outidx = i-j;

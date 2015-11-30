@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define __mytid (blockDim.x * blockIdx.x + threadIdx.x)
 
@@ -315,13 +316,13 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 
 // global unique thread index, block dimension uses only x-coordinate
     const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
-    printf("in kerne\n");
+    //printf("in kerne\n");
 //    int tid = threadIdx.x + blockIdx.x*blockDim.x;
 	int zdim = threadIdx.z;
     uint8_t *payload = data + data_stride*tid + data_ofs;
-   printf("in kernel0\n");
+   //printf("in kernel0\n");
     int outidx = 0x1fffffff;
-    printf("in kernel1\n");
+    //printf("in kernel1\n");
 //    int nid, cid = 0, tres;
 //    for (int i=0; i<(data_stride-data_ofs); i++) {
 //	nid = g4c_acm_dtransitions(dacm, cid)[payload[i]];
@@ -331,14 +332,14 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 //	}
 //	cid = nid;
 //    }
-    printf("reading lps\n");
+    //printf("reading lps\n");
     int *lps = g4c_kmp_dlpss(dacm, zdim);
-    printf("read lps, reading pattern\n");
+    //printf("read lps, reading pattern\n");
     char* pattern = g4c_kmp_dpatterns(dacm, zdim);
-    printf("read lps and pattern\n");
+    //printf("read lps and pattern\n");
     int i = 0, j = 0;// index for txt[]
     while (i < data_stride) {
-        printf("in while, i: %d\n", i);
+        //printf("in while, i: %d\n", i);
         if (pattern[j] == payload[i]) {
             j++;
             i++;
@@ -352,9 +353,9 @@ gacm_match_nl0(g4c_kmp_t *dacm,
             // Do not match lps[0..lps[j-1]] characters,
             // they will match anyway
             if (j != 0) {
-                printf("before j\n");
+                //printf("before j\n");
                 j = lps[j-1]; 
-                printf("after j\n");    
+                //printf("after j\n");    
             }
             else
                 i = i+1;

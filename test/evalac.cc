@@ -140,6 +140,7 @@ int main(int argc, char *argv[])
 
     int nrpkts[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 1<<14, 1<<15};
     int nszs = sizeof(nrpkts)/sizeof(int);
+    //int nszs = 1;
     npkts = nrpkts[nszs-1];
 
     switch(argc) {
@@ -271,7 +272,7 @@ int main(int argc, char *argv[])
 	blens[b] = ttlen/ns;
     }
 
-    for (int b=0; b<nszs; b++) {
+    /*for (int b=0; b<nszs; b++) {
 	tv = timing_start();
 	for (int st=0; st<ns; st++) {
 	    for (int i=0; i<nrpkts[b]; i++) {
@@ -285,7 +286,7 @@ int main(int argc, char *argv[])
 	    }
 	}
 	ctimes[b] = timing_stop(&tv);
-    }
+    }*/
 
     for (int b=0; b<nszs; b++) {
 	printf("Done GPU, pkts %6d, BW %12.5lf Mb/s, rate %12.6lf Mpps\n",
@@ -293,11 +294,11 @@ int main(int argc, char *argv[])
 	       ((double)nrpkts[b])/(double)gtimes[b]);
     }
 
-    for (int b=0; b<nszs; b++) {
+    /*for (int b=0; b<nszs; b++) {
 	printf("Done CPU, pkts %6d, BW %12.5lf Mb/s, rate %12.6lf Mpps\n",
 	       nrpkts[b], (((double)(blens[b]*ns))/(double)ctimes[b])*8,
 	       ((double)(nrpkts[b]*ns))/(double)ctimes[b]);
-    }
+    }*/
  
     
     return 0;

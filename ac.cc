@@ -373,12 +373,12 @@ g4c_create_matcher(char **ptns, int nptns, int withdev, int stream)
 //    acm->transitions = (int*)g4c_ptr_add(acm->mem, G4C_PAGE_SIZE);
 //    acm->outputs = (int*)g4c_ptr_add(acm->transitions, trsz);
     acm->lspss = (int*)g4c_ptr_add(acm->mem, G4C_PAGE_SIZE);
-    acm->patterns = (char**)g4c_ptr_add(acm->lspss, lpssz);
+    acm->patterns = (char*)g4c_ptr_add(acm->lspss, lpssz);
     acm->patternLengths = (int*)g4c_ptr_add(acm->patterns, patternssz);
     if (withdev) {
         acm->dlspss = (int*)g4c_ptr_add(acm->devmem, G4C_PAGE_SIZE);
 	//printf("in if dev\n");
-        acm->dpatterns = (char**)g4c_ptr_add(acm->dlspss, lpssz);
+        acm->dpatterns = (char*)g4c_ptr_add(acm->dlspss, lpssz);
         acm->dPatternLengths = (int*)g4c_ptr_add(acm->dpatterns, patternssz);
     }
     //printf("out of the if\n");

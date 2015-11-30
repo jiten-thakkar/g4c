@@ -351,7 +351,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     //printf("read lps, reading pattern\n");
     char* pattern = g4c_kmp_dpatterns(dacm, patternId);
 	int patternLength = dacm->dPatternLengths[patternId];
-    //printf("pattern: %s\n", pattern);
+    //printf("pid: %d plen: %d pattern: %s\n", patternId, patternLength, pattern);
    //__syncthreads();
     //printf("read lps and pattern\n");
     int i = 0, j = 0;// index for txt[]

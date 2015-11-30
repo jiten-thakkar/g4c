@@ -96,11 +96,11 @@ extern "C" {
 
         int nlpss;
         int *lspss;
-        char **patterns;
+        char *patterns;
         int *patternLengths;
 
         int *dlspss;
-        char **dpatterns;
+        char *dpatterns;
         int *dPatternLengths;
     } g4c_kmp_t;
 

@@ -310,16 +310,18 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
 	      int *ress, uint32_t res_stride, uint32_t res_ofs)
 {
-    const unsigned long long int blockId = blockIdx.x //1D
-                                           + blockIdx.y * gridDim.x //2D
-                                           + gridDim.x * gridDim.y * blockIdx.z; //3D
+    //const unsigned long long int blockId = blockIdx.x //1D
+      //                                     + blockIdx.y * gridDim.x //2D
+        //                                   + gridDim.x * gridDim.y * blockIdx.z; //3D
 
 // global unique thread index, block dimension uses only x-coordinate
 //    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
-    //printf("in kerne\n");
+    printf("in kerne\n");
     int tid = threadIdx.x + blockIdx.x*blockDim.x;
 //	int zdim = threadIdx.z;
     int patternId = threadIdx.y;
+    printf("patternid: %d\n", patternId);
+    __syncthreads();
     uint8_t *payload = data + data_stride*tid + data_ofs;
    //printf("in kernel0\n");
     int outidx = 0x1fffffff;
@@ -338,6 +340,8 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     //printf("read lps, reading pattern\n");
     char* pattern = g4c_kmp_dpatterns(dacm, patternId);
 	int patternLength = dacm->dPatternLengths[patternId];
+    printf("pattern: %s\n", pattern);
+   __syncthreads();
     //printf("read lps and pattern\n");
     int i = 0, j = 0;// index for txt[]
     while (i < data_stride) {
@@ -366,7 +370,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 
     if (outidx == 0x1fffffff)
 	outidx = 0;
-    *(ress + tid*res_stride + zdim + res_ofs) = outidx;
+    *(ress + tid*res_stride + patternId + res_ofs) = outidx;
 }
 
 __global__ void

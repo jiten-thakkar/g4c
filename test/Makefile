@@ -3,7 +3,7 @@
 CXX=g++
 NVCC=nvcc
 #CXXFLAGS=-O3 -g
-CXXFLAGS=-O3 -O0 -g
+CXXFLAGS=-O3  -g
 NVCCFLAGS=-arch=sm_20 -O3 --keep
 #NVCCFLAGS=-arch=sm_20  --keep
 

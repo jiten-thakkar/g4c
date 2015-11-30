@@ -361,8 +361,9 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 //            j++;
 //            i++;
 //        }
-        j += pattern[j] == payload[i];
-        i += pattern[j] == payload[i];
+        int tmp = pattern[j] == payload[i];
+        j += tmp;
+        i += tmp;
         if (j == patternLength) {
 //            printf("Found pattern at index %d \n", i-j);
             outidx = i-j;

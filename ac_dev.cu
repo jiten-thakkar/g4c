@@ -441,11 +441,11 @@ g4c_gpu_acm_match(
 {
 //    if (s <= 0)
 //	return -1;
-    
+    int threadsPerBlock = 1024;
     cudaStream_t stream = g4c_get_stream(s);
-    int nblocks = g4c_round_up(nr, 32)/32;
+    int nblocks = g4c_round_up(nr, threadsPerBlock)/threadsPerBlock;
     dim3 dimGrid(nblocks, TOTAL_PATTERNS);
-    int nthreads = nr > 32? 32:nr;
+    int nthreads = nr > threadsPerBlock? threadsPerBlock:nr;
     dim3 dimBlock(nthreads);
     if (dlens) {
 	switch(mtype) {

@@ -213,7 +213,7 @@ extern "C" {
 extern "C" int
 g4c_cpu_acm_match(g4c_kmp_t *dacm, uint8_t *data, int len, int patternNum)
 {
-   printf("in cpu match\n");
+   //printf("in cpu match\n");
 //    int ret = 0, nid;
 //    uint8_t c;
 //
@@ -254,7 +254,7 @@ g4c_cpu_acm_match(g4c_kmp_t *dacm, uint8_t *data, int len, int patternNum)
                 i = i+1;
         }
     }
-    printf("done with cpu match\n");
+    //printf("done with cpu match\n");
     return outidx;
 }
 

@@ -7,7 +7,15 @@
 #include <string.h>
 
 #define __mytid (blockDim.x * blockIdx.x + threadIdx.x)
-
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
 __global__ void
 gpu_ac_match_general(char *strs, int stride, int *lens, unsigned int *ress,
 		     ac_dev_machine_t *acm)
@@ -316,12 +324,15 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 
 // global unique thread index, block dimension uses only x-coordinate
 //    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
-    printf("in kerne\n");
+    //printf("in kernel\n");
+    //int tid = threadIdx.y + blockIdx.y*blockDim.y;
+    //printf("threadId: %d\n", tid);
     int tid = threadIdx.x + blockIdx.x*blockDim.x;
+    //printf("threadId2: %d\n", tid);
 //	int zdim = threadIdx.z;
-    int patternId = threadIdx.y;
-    printf("patternid: %d\n", patternId);
-    __syncthreads();
+    int patternId = blockIdx.y;
+    //printf("patternid: %d\n", patternId);
+    //__syncthreads();
     uint8_t *payload = data + data_stride*tid + data_ofs;
    //printf("in kernel0\n");
     int outidx = 0x1fffffff;
@@ -340,8 +351,8 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     //printf("read lps, reading pattern\n");
     char* pattern = g4c_kmp_dpatterns(dacm, patternId);
 	int patternLength = dacm->dPatternLengths[patternId];
-    printf("pattern: %s\n", pattern);
-   __syncthreads();
+    //printf("pattern: %s\n", pattern);
+   //__syncthreads();
     //printf("read lps and pattern\n");
     int i = 0, j = 0;// index for txt[]
     while (i < data_stride) {
@@ -431,8 +442,9 @@ g4c_gpu_acm_match(
     
     cudaStream_t stream = g4c_get_stream(s);
     int nblocks = g4c_round_up(nr, 32)/32;
+    dim3 dimGrid(nblocks, TOTAL_PATTERNS);
     int nthreads = nr > 32? 32:nr;
-	dim3 dimBlock(TOTAL_PATTERNS, nthreads);
+    dim3 dimBlock(nthreads);
     if (dlens) {
 	switch(mtype) {
 	case 1:
@@ -456,10 +468,18 @@ g4c_gpu_acm_match(
 	    break;
 	case 0:
 	default:
-	    gacm_match_nl0<<<nblocks, dimBlock, 0, stream>>>(
+            printf("calling kernel\n");
+            printf("blocks %d, threads: %d\n", nblocks, nthreads);
+	    gacm_match_nl0<<<dimGrid, dimBlock, 0, stream>>>(
 		dacm, ddata, data_stride, data_ofs,
 		dress, res_stride, res_ofs);
             printf("kernel done\n");
+            cudaError_t cudaerr = cudaDeviceSynchronize();
+    if (cudaerr != CUDA_SUCCESS)
+        printf("kernel launch failed with error \"%s\".\n",
+               cudaGetErrorString(cudaerr));
+            gpuErrchk( cudaPeekAtLastError() );
+gpuErrchk( cudaDeviceSynchronize() );
 	    break;
 	}
     }

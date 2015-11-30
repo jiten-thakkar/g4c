@@ -315,10 +315,11 @@ gacm_match_nl0(g4c_kmp_t *dacm,
                                            + gridDim.x * gridDim.y * blockIdx.z; //3D
 
 // global unique thread index, block dimension uses only x-coordinate
-    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
+//    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
     //printf("in kerne\n");
-//    int tid = threadIdx.x + blockIdx.x*blockDim.x;
-	int zdim = threadIdx.z;
+    int tid = threadIdx.x + blockIdx.x*blockDim.x;
+//	int zdim = threadIdx.z;
+    int patternId = threadIdx.y;
     uint8_t *payload = data + data_stride*tid + data_ofs;
    //printf("in kernel0\n");
     int outidx = 0x1fffffff;
@@ -333,10 +334,10 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 //	cid = nid;
 //    }
     //printf("reading lps\n");
-    int *lps = g4c_kmp_dlpss(dacm, zdim);
+    int *lps = g4c_kmp_dlpss(dacm, patternId);
     //printf("read lps, reading pattern\n");
-    char* pattern = g4c_kmp_dpatterns(dacm, zdim);
-	int patternLength = dacm->dPatternLengths[zdim];
+    char* pattern = g4c_kmp_dpatterns(dacm, patternId);
+	int patternLength = dacm->dPatternLengths[patternId];
     //printf("read lps and pattern\n");
     int i = 0, j = 0;// index for txt[]
     while (i < data_stride) {
@@ -427,16 +428,17 @@ g4c_gpu_acm_match(
     cudaStream_t stream = g4c_get_stream(s);
     int nblocks = g4c_round_up(nr, 32)/32;
     int nthreads = nr > 32? 32:nr;
+	dim3 dimBlock(TOTAL_PATTERNS, nthreads);
     if (dlens) {
 	switch(mtype) {
 	case 1:
-	    gacm_match_l1<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
+	    gacm_match_l1<<<nblocks, nthreads, 0, stream>>>(
 		dacm, ddata, data_stride, data_ofs, dlens,
 		dress, res_stride, res_ofs);
 	    break;
 	case 0:
 	default:
-	    gacm_match_l0<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
+	    gacm_match_l0<<<nblocks, nthreads, 0, stream>>>(
 		dacm, ddata, data_stride, data_ofs, dlens,
 		dress, res_stride, res_ofs);
 	    break;
@@ -444,13 +446,13 @@ g4c_gpu_acm_match(
     } else {
 	switch(mtype) {
 	case 1:
-	    gacm_match_nl1<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
+	    gacm_match_nl1<<<nblocks, nthreads, 0, stream>>>(
 		dacm, ddata, data_stride, data_ofs,
 		dress, res_stride, res_ofs);
 	    break;
 	case 0:
 	default:
-	    gacm_match_nl0<<<nblocks, nthreads, TOTAL_PATTERNS, stream>>>(
+	    gacm_match_nl0<<<nblocks, dimBlock, 0, stream>>>(
 		dacm, ddata, data_stride, data_ofs,
 		dress, res_stride, res_ofs);
             printf("kernel done\n");

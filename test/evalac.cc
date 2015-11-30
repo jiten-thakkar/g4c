@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
     int npkts = 1024;
 
     int nrpkts[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 1<<14, 1<<15};
-    int nszs = sizeof(nrpkts)/sizeof(int);
-    //int nszs = 1;
+    //int nszs = sizeof(nrpkts)/sizeof(int);
+    int nszs = 1;
     npkts = nrpkts[nszs-1];
 
     switch(argc) {

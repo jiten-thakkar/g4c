@@ -325,15 +325,15 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 // global unique thread index, block dimension uses only x-coordinate
 //    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
     //printf("in kernel\n");
-    //int tid = threadIdx.y + blockIdx.y*blockDim.y;
-    //printf("threadId: %d\n", tid);
+    int tid0 = threadIdx.y + blockIdx.y*blockDim.y;
+    printf("threadId: %d\n", tid0);
     int tid = threadIdx.x + blockIdx.x*blockDim.x;
-    //printf("threadId2: %d\n", tid);
+    printf("threadId2: %d\n", tid);
 //	int zdim = threadIdx.z;
     int patternId = blockIdx.y;
-    //printf("patternid: %d\n", patternId);
+    printf("patternid: %d\n", patternId);
     //__syncthreads();
-    uint8_t *payload = data + data_stride*tid + data_ofs;
+    /*uint8_t *payload = data + data_stride*tid + data_ofs;
    //printf("in kernel0\n");
     int outidx = 0x1fffffff;
     //printf("in kernel1\n");
@@ -385,6 +385,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     if (outidx == 0x1fffffff)
 	outidx = 0;
     *(ress + tid*res_stride + patternId + res_ofs) = outidx;
+     * */
 }
 
 __global__ void

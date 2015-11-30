@@ -97,9 +97,11 @@ extern "C" {
         int nlpss;
         int *lspss;
         char **patterns;
+        int *patternLengths;
 
         int *dlspss;
         char **dpatterns;
+        int *dPatternLengths;
     } g4c_kmp_t;
 
 #define g4c_acm_htransitions(acm, id) \

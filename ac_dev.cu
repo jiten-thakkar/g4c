@@ -336,6 +336,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     int *lps = g4c_kmp_dlpss(dacm, zdim);
     //printf("read lps, reading pattern\n");
     char* pattern = g4c_kmp_dpatterns(dacm, zdim);
+	int patternLength = dacm->dPatternLengths[zdim];
     //printf("read lps and pattern\n");
     int i = 0, j = 0;// index for txt[]
     while (i < data_stride) {
@@ -344,7 +345,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
             j++;
             i++;
         }
-        if (j == PATTERN_LENGTH) {
+        if (j == patternLength) {
 //            printf("Found pattern at index %d \n", i-j);
             outidx = i-j;
             break;

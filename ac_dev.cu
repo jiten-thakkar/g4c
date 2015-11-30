@@ -460,28 +460,24 @@ g4c_gpu_acm_match(
 	    break;
 	}  	    
     } else {
-	switch(mtype) {
-	case 1:
-	    gacm_match_nl1<<<nblocks, nthreads, 0, stream>>>(
-		dacm, ddata, data_stride, data_ofs,
-		dress, res_stride, res_ofs);
-	    break;
-	case 0:
-	default:
+        switch(mtype) {
+        case 1:
+            gacm_match_nl1<<<nblocks, nthreads, 0, stream>>>(
+            dacm, ddata, data_stride, data_ofs,
+            dress, res_stride, res_ofs);
+            break;
+        case 0:
+        default:
             printf("calling kernel\n");
             printf("blocks %d, threads: %d\n", nblocks, nthreads);
-	    gacm_match_nl0<<<dimGrid, dimBlock, 0, stream>>>(
-		dacm, ddata, data_stride, data_ofs,
-		dress, res_stride, res_ofs);
+            gacm_match_nl0<<<dimGrid, dimBlock, 0, stream>>>(
+            dacm, ddata, data_stride, data_ofs,
+            dress, res_stride, res_ofs);
             printf("kernel done\n");
-            cudaError_t cudaerr = cudaDeviceSynchronize();
-    if (cudaerr != CUDA_SUCCESS)
-        printf("kernel launch failed with error \"%s\".\n",
-               cudaGetErrorString(cudaerr));
             gpuErrchk( cudaPeekAtLastError() );
-gpuErrchk( cudaDeviceSynchronize() );
-	    break;
-	}
+            gpuErrchk( cudaDeviceSynchronize() );
+            break;
+        }
     }
     
     return 0;

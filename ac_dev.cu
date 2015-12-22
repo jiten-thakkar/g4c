@@ -316,7 +316,7 @@ gacm_match_l0(g4c_kmp_t *dacm,
 __global__ void
 gacm_match_nl0(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
-	      int *ress, uint32_t res_stride, uint32_t res_ofs, int maxPatternLen)
+	      int *ress, uint32_t res_stride, uint32_t res_ofs, int maxPatternLen, int totalPatterns)
 {
     //const unsigned long long int blockId = blockIdx.x //1D
       //                                     + blockIdx.y * gridDim.x //2D
@@ -343,14 +343,29 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     //printf("patternid: %d\n", patternId);
     //printf("patternid: %d\n", patternId);
     //__syncthreads();
-    extern __shared__ int sm[];
-    uint8_t *payload = data + data_stride*tid + data_ofs;
+    extern __shared__ uint8_t sm[];
+    uint8_t *payload_temp = data + data_stride*tid + data_ofs;
+    //char* pattern_temp = g4c_kmp_dpatterns(dacm, patternId);
+    //char* pattern = (char*)&sm[(data_stride-data_ofs)];
+    //int *lps_temp = g4c_kmp_dlpss(dacm, patternId);
+    //int *lps = (int*)&pattern[totalPatterns*maxPatternLen];
     //char payloadt[] = "ABABDABACDABABCABAB";
     //char* payload = payloadt + threadIdx.y%19;
-    //uint8_t *payload = (uint8_t*)&sm[maxPatternLen];
-    //for (int i=0; i<(data_stride-data_ofs); i++) {
-      //payload[i] = payload_temp[i];
-    //} 
+    uint8_t *payload = sm;
+    if(threadIdx.x==0 && threadIdx.y==0) {
+    for (int i=0; i<(data_stride-data_ofs); i++) {
+      payload[i] = payload_temp[i];
+    }
+    /*for(int j=0; j<totalPatterns*maxPatternLen; j++) {
+      //int patternLengthTemp = dacm->dPatternLengths[j];
+      pattern[j] = pattern_temp[j]; 
+    }
+    for(int j=0; j<totalPatterns*maxPatternLen; j++) {
+      //int patternLengthTemp = dacm->dPatternLengths[j];
+      lps[j] = lps_temp[j];
+    }*/
+    }
+__syncthreads();
     //memcpy(payload, payload_temp, data_stride);
    //printf("in kernel0\n");
     int outidx = 0x1fffffff;
@@ -368,15 +383,15 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     //printf("read lps, reading pattern\n");
     int patternLength = dacm->dPatternLengths[patternId];
     //int patternLength = 9;
-    char* pattern_temp = g4c_kmp_dpatterns(dacm, patternId);
-    char* pattern = (char*)&sm;
+    char* pattern = g4c_kmp_dpatterns(dacm, patternId);
+    //char* pattern = (char*)&sm;
     //char patternt[] = "ABABCABAB";
     //char* pattern = patternt;
-    int *lps_temp = g4c_kmp_dlpss(dacm, patternId);
-    int *lps = (int*)&pattern[(maxPatternLen)];
+    int *lps = g4c_kmp_dlpss(dacm, patternId);
+    //int *lps = (int*)&pattern[(maxPatternLen)];
     //int lpst[] = {0,0,1,2,0,1,2,3,4};
     //int *lps = lpst;
-    if (threadIdx.x == 0 && threadIdx.y == 0) {
+    /*if (threadIdx.x == 0 && threadIdx.y == 0) {
     for(int i=0; i<patternLength; i++){
       pattern[i] = pattern_temp[i];
     }
@@ -385,8 +400,8 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     for(int i=0; i<patternLength; i++) {
       lps[i] = lps_temp[i];
     }
-    }
-    __syncthreads();
+    }*/
+    //__syncthreads();
     //pattern[patternLength] = '\0';
     //printf("pid: %d plen: %d pattern: %s\n", patternId, patternLength, pattern);
    //__syncthreads();
@@ -510,10 +525,11 @@ g4c_gpu_acm_match(
         case 0:
         default:
             //printf("calling kernel\n");
-            printf("blocks %d, threads: %d\n", nblocks, nthreads);
-            gacm_match_nl0<<<dimGrid, dimBlock, (sizeof(char)*PATTERN_LENGTH)+(sizeof(int)*PATTERN_LENGTH), stream>>>(
+            //printf("blocks %d, threads: %d\n", nblocks, nthreads);
+            gacm_match_nl0<<<dimGrid, dimBlock, (sizeof(uint8_t)*(data_stride-data_ofs)), stream>>>(
+            //gacm_match_nl0<<<dimGrid, dimBlock, (sizeof(uint8_t)*(data_stride-data_ofs))+(sizeof(int)*PATTERN_LENGTH*TOTAL_PATTERNS), stream>>>(
             dacm, ddata, data_stride, data_ofs,
-            dress, res_stride, res_ofs, PATTERN_LENGTH);
+            dress, res_stride, res_ofs, PATTERN_LENGTH, TOTAL_PATTERNS);
             //printf("kernel done\n");
             gpuErrchk( cudaPeekAtLastError() );
             //gpuErrchk( cudaDeviceSynchronize() );

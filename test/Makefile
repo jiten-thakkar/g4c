@@ -4,7 +4,7 @@ CXX=g++
 NVCC=nvcc
 #CXXFLAGS=-O3 -g
 CXXFLAGS=-O3  -g
-NVCCFLAGS=-arch=sm_20 -O3 --keep
+NVCCFLAGS=-arch=sm_20 -O3 --keep -lineinfo
 #NVCCFLAGS=-arch=sm_20  --keep
 
 COMMSRCS=../mm.cc ../main.cu

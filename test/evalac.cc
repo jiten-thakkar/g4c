@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
     int npkts = 1024;
 
     int nrpkts[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 1<<14, 1<<15};
-    //int nszs = sizeof(nrpkts)/sizeof(int);
-    int nszs = 1;
+    int nszs = sizeof(nrpkts)/sizeof(int);
+    //int nszs = 3;
     npkts = nrpkts[nszs-1];
 
     switch(argc) {
@@ -244,12 +244,14 @@ int main(int argc, char *argv[])
 			  eval_items[i].devstrs,
 			  nrpkts[b]*eval_items[i].stride,
 			  eval_items[i].stream);
+	    //tv = timing_start();    
 	    g4c_gpu_acm_match((g4c_kmp_t*)acm->devmem,
 			      nrpkts[b],
 			      eval_items[i].devstrs,
 			      eval_items[i].stride, 0, 0,
 			      eval_items[i].devress, 1, 0,
 			      eval_items[i].stream, mtype);
+	    //gtimes[b] = timing_stop(&tv)/ns;
 	    g4c_d2h_async(eval_items[i].devress,
 			  eval_items[i].ress,
 			  nrpkts[b]*sizeof(int),

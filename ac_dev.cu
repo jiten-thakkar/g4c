@@ -316,7 +316,7 @@ gacm_match_l0(g4c_kmp_t *dacm,
 __global__ void
 gacm_match_nl0(g4c_kmp_t *dacm,
 	      uint8_t *data, uint32_t data_stride, uint32_t data_ofs,
-	      int *ress, uint32_t res_stride, uint32_t res_ofs)
+	      int *ress, uint32_t res_stride, uint32_t res_ofs, int maxPatternLen)
 {
     //const unsigned long long int blockId = blockIdx.x //1D
       //                                     + blockIdx.y * gridDim.x //2D
@@ -325,15 +325,31 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 // global unique thread index, block dimension uses only x-coordinate
 //    const unsigned long long int tid = blockId * blockDim.x + threadIdx.x;
     //printf("in kernel\n");
-    int tid0 = threadIdx.y + blockIdx.y*blockDim.y;
-    printf("threadId: %d\n", tid0);
-    int tid = threadIdx.x + blockIdx.x*blockDim.x;
-    printf("threadId2: %d\n", tid);
+    //printf("blockdimex: %d, blockdimy: %d blockdimz: %d \n", blockDim.x, blockDim.y, blockDim.z);
+    //printf("blockx: %d, blcky: %d\n", blockIdx.x, blockIdx.y);
+    //int tid = threadIdx.y + threadIdx.x * blockDim.y;
+    //printf("threadId: %d\n", tid);
+    //int tid0 = threadIdx.x + blockIdx.x*blockDim.x;
+    //printf("threadId2: %d\n", tid0);
 //	int zdim = threadIdx.z;
-    int patternId = blockIdx.y;
-    printf("patternid: %d\n", patternId);
+    //printf("threadidx: %d \n", threadIdx.x);
+    int tid = threadIdx.x+(blockIdx.y*blockDim.x);
+    //int tid = 0;
+    int patternId = blockIdx.x;
+    //int patternId = 0;
+    //printf("tid: %d\n", tid);
+    //printf("patternid: %d\n", patternId);
+    //printf("patternid: %d\n", patternId);
     //__syncthreads();
-    /*uint8_t *payload = data + data_stride*tid + data_ofs;
+    extern __shared__ int sm[];
+    uint8_t *payload = data + data_stride*tid + data_ofs;
+    //char payloadt[] = "ABABDABACDABABCABAB";
+    //char* payload = payloadt + threadIdx.y%19;
+    //uint8_t *payload = (uint8_t*)&sm[maxPatternLen];
+    //for (int i=0; i<(data_stride-data_ofs); i++) {
+      //payload[i] = payload_temp[i];
+    //} 
+    //memcpy(payload, payload_temp, data_stride);
    //printf("in kernel0\n");
     int outidx = 0x1fffffff;
     //printf("in kernel1\n");
@@ -347,10 +363,29 @@ gacm_match_nl0(g4c_kmp_t *dacm,
 //	cid = nid;
 //    }
     //printf("reading lps\n");
-    int *lps = g4c_kmp_dlpss(dacm, patternId);
     //printf("read lps, reading pattern\n");
-    char* pattern = g4c_kmp_dpatterns(dacm, patternId);
-	int patternLength = dacm->dPatternLengths[patternId];
+    int patternLength = dacm->dPatternLengths[patternId];
+    //int patternLength = 9;
+    char* pattern_temp = g4c_kmp_dpatterns(dacm, patternId);
+    char* pattern = (char*)&sm;
+    //char patternt[] = "ABABCABAB";
+    //char* pattern = patternt;
+    int *lps_temp = g4c_kmp_dlpss(dacm, patternId);
+    int *lps = (int*)&pattern[(maxPatternLen)];
+    //int lpst[] = {0,0,1,2,0,1,2,3,4};
+    //int *lps = lpst;
+    if (threadIdx.x == 0 && threadIdx.y == 0) {
+    for(int i=0; i<patternLength; i++){
+      pattern[i] = pattern_temp[i];
+    }
+
+
+    for(int i=0; i<patternLength; i++) {
+      lps[i] = lps_temp[i];
+    }
+    }
+    __syncthreads();
+    //pattern[patternLength] = '\0';
     //printf("pid: %d plen: %d pattern: %s\n", patternId, patternLength, pattern);
    //__syncthreads();
     //printf("read lps and pattern\n");
@@ -369,7 +404,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
             outidx = i-j;
             break;
 //            j = lps[j-1];
-        } else if (i < data_stride && pattern[j] != payload[i]) { // mismatch after j matches
+        } else if (i < (data_stride-data_ofs) && pattern[j] != payload[i]) { // mismatch after j matches
             // Do not match lps[0..lps[j-1]] characters,
             // they will match anyway
             if (j != 0) {
@@ -385,7 +420,7 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     if (outidx == 0x1fffffff)
 	outidx = 0;
     *(ress + tid*res_stride + patternId + res_ofs) = outidx;
-     * */
+    //*/
 }
 
 __global__ void
@@ -443,10 +478,10 @@ g4c_gpu_acm_match(
 {
 //    if (s <= 0)
 //	return -1;
-    int threadsPerBlock = 1024;
+    int threadsPerBlock = 32;
     cudaStream_t stream = g4c_get_stream(s);
     int nblocks = g4c_round_up(nr, threadsPerBlock)/threadsPerBlock;
-    dim3 dimGrid(nblocks, TOTAL_PATTERNS);
+    dim3 dimGrid(TOTAL_PATTERNS, nblocks);
     int nthreads = nr > threadsPerBlock? threadsPerBlock:nr;
     dim3 dimBlock(nthreads);
     if (dlens) {
@@ -472,14 +507,14 @@ g4c_gpu_acm_match(
             break;
         case 0:
         default:
-            printf("calling kernel\n");
+            //printf("calling kernel\n");
             printf("blocks %d, threads: %d\n", nblocks, nthreads);
-            gacm_match_nl0<<<dimGrid, dimBlock, 0, stream>>>(
+            gacm_match_nl0<<<dimGrid, dimBlock, (sizeof(char)*PATTERN_LENGTH)+(sizeof(int)*PATTERN_LENGTH), stream>>>(
             dacm, ddata, data_stride, data_ofs,
-            dress, res_stride, res_ofs);
-            printf("kernel done\n");
+            dress, res_stride, res_ofs, PATTERN_LENGTH);
+            //printf("kernel done\n");
             gpuErrchk( cudaPeekAtLastError() );
-            gpuErrchk( cudaDeviceSynchronize() );
+            //gpuErrchk( cudaDeviceSynchronize() );
             break;
         }
     }

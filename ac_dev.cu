@@ -333,11 +333,13 @@ gacm_match_nl0(g4c_kmp_t *dacm,
     //printf("threadId2: %d\n", tid0);
 //	int zdim = threadIdx.z;
     //printf("threadidx: %d \n", threadIdx.x);
-    int tid = threadIdx.x+(blockIdx.y*blockDim.x);
+    //int tid = threadIdx.x+(blockIdx.y*blockDim.x);
+    int tid = blockIdx.x;
     //int tid = 0;
-    int patternId = blockIdx.x;
+    int patternId = threadIdx.x;
     //int patternId = 0;
-    //printf("tid: %d\n", tid);
+    //if(patternId == 15)
+     //printf("tid: %d\n", patternId);
     //printf("patternid: %d\n", patternId);
     //printf("patternid: %d\n", patternId);
     //__syncthreads();
@@ -481,9 +483,9 @@ g4c_gpu_acm_match(
     int threadsPerBlock = 32;
     cudaStream_t stream = g4c_get_stream(s);
     int nblocks = g4c_round_up(nr, threadsPerBlock)/threadsPerBlock;
-    dim3 dimGrid(TOTAL_PATTERNS, nblocks);
+    dim3 dimGrid(nr);
     int nthreads = nr > threadsPerBlock? threadsPerBlock:nr;
-    dim3 dimBlock(nthreads);
+    dim3 dimBlock(TOTAL_PATTERNS);
     if (dlens) {
 	switch(mtype) {
 	case 1:
